@@ -135,9 +135,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([2], event.insertedIndices)
-            XCTAssertTrue(event.deletedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(1, event.inserted.count)
+            XCTAssertEqual("buzz", event.inserted[0])
+            XCTAssertTrue(event.removed.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -193,9 +194,11 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([2, 3, 4], event.insertedIndices)
-            XCTAssertTrue(event.deletedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(3, event.inserted.count)
+            XCTAssertEqual(2, event.inserted.startIndex)
+            XCTAssertEqual("buzz", event.inserted[2])
+            XCTAssertTrue(event.removed.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -251,9 +254,11 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([2, 3, 4], event.insertedIndices)
-            XCTAssertTrue(event.deletedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(3, event.inserted.count)
+            XCTAssertEqual(2, event.inserted.startIndex)
+            XCTAssertEqual("buzz", event.inserted[2])
+            XCTAssertTrue(event.removed.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -306,9 +311,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([3], event.deletedIndices)
-            XCTAssertTrue(event.insertedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(1, event.removed.count)
+            XCTAssertEqual("tea", event.removed[0])
+            XCTAssertTrue(event.inserted.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -362,9 +368,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([2], event.insertedIndices)
-            XCTAssertTrue(event.deletedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(1, event.inserted.count)
+            XCTAssertEqual("milk", event.inserted[2])
+            XCTAssertTrue(event.removed.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -418,9 +425,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([2], event.deletedIndices)
-            XCTAssertTrue(event.insertedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(1, event.removed.count)
+            XCTAssertEqual("buzz", event.removed[0])
+            XCTAssertTrue(event.inserted.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -472,9 +480,11 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([0,1,2,3,4], event.deletedIndices)
-            XCTAssertTrue(event.insertedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(5, event.removed.count)
+            XCTAssertEqual("foo", event.removed[0])
+            XCTAssertEqual("coffee", event.removed[4])
+            XCTAssertTrue(event.inserted.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -529,9 +539,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([2,3,4], event.insertedIndices)
-            XCTAssertTrue(event.deletedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(3, event.inserted.count)
+            XCTAssertEqual("milk", event.inserted[2])
+            XCTAssertTrue(event.removed.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -586,9 +597,11 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([1,2,3], event.insertedIndices)
-            XCTAssertEqual([1,2], event.deletedIndices)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(3, event.inserted.count)
+            XCTAssertEqual("milk", event.inserted[1])
+            XCTAssertEqual(2, event.removed.count)
+            XCTAssertEqual("bar", event.removed[0])
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -645,9 +658,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([3], event.deletedIndices)
-            XCTAssertTrue(event.insertedIndices.isEmpty)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(1, event.removed.count)
+            XCTAssertEqual("tea", event.removed[0])
+            XCTAssertTrue(event.inserted.isEmpty)
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -705,9 +719,10 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([1], event.updatedIndices)
-            XCTAssertTrue(event.deletedIndices.isEmpty)
-            XCTAssertTrue(event.insertedIndices.isEmpty)
+            XCTAssertEqual(1, event.updated.count)
+            XCTAssertEqual("lion", event.updated[0])
+            XCTAssertTrue(event.removed.isEmpty)
+            XCTAssertTrue(event.inserted.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)
@@ -764,9 +779,11 @@ class ObservableArrayTests: XCTestCase {
         let exp = expectation(description: "event emitted")
         a.rx_events().subscribe { (eventObject) -> Void in
             guard let event = eventObject.element else { return XCTFail() }
-            XCTAssertEqual([1,2,3], event.insertedIndices)
-            XCTAssertEqual([1,2], event.deletedIndices)
-            XCTAssertTrue(event.updatedIndices.isEmpty)
+            XCTAssertEqual(3, event.inserted.count)
+            XCTAssertEqual("milk", event.inserted[1])
+            XCTAssertEqual(2, event.removed.count)
+            XCTAssertEqual("bar", event.removed[0])
+            XCTAssertTrue(event.updated.isEmpty)
             exp.fulfill()
             }
             .addDisposableTo(disposeBag)

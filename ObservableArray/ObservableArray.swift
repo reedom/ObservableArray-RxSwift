@@ -4,26 +4,27 @@
 //
 //  Created by Safx Developer on 2015/02/19.
 //  Copyright (c) 2016 Safx Developers. All rights reserved.
+//  Copyright (c) 2017 HANAI Tohru. All rights reserved.
 //
 
 import Foundation
 import RxSwift
 
-public struct ArrayChangeEvent {
-    public let insertedIndices: [Int]
-    public let deletedIndices: [Int]
-    public let updatedIndices: [Int]
+public struct ArrayChangeEvent<Element> {
+    public let inserted: ArraySlice<Element>
+    public let removed: [Element]
+    public let updated: ArraySlice<Element>
 
-    fileprivate init(inserted: [Int] = [], deleted: [Int] = [], updated: [Int] = []) {
-        assert(inserted.count + deleted.count + updated.count > 0)
-        self.insertedIndices = inserted
-        self.deletedIndices = deleted
-        self.updatedIndices = updated
+    fileprivate init(inserted: ArraySlice<Element> = [], removed: [Element] = [], updated: ArraySlice<Element> = []) {
+        assert(0 < inserted.count + removed.count + updated.count)
+        self.inserted = inserted
+        self.removed = removed
+        self.updated = updated
     }
 }
 
 public struct ObservableArray<Element>: ExpressibleByArrayLiteral {
-    public typealias EventType = ArrayChangeEvent
+    public typealias EventType = ArrayChangeEvent<Element>
 
     internal var eventSubject: PublishSubject<EventType>!
     internal var elementsSubject: BehaviorSubject<[Element]>!
@@ -96,16 +97,16 @@ extension ObservableArray: MutableCollection {
 
     public mutating func append(_ newElement: Element) {
         elements.append(newElement)
-        arrayDidChange(ArrayChangeEvent(inserted: [elements.count - 1]))
+        arrayDidChange(ArrayChangeEvent(inserted: [newElement]))
     }
 
     public mutating func append<S : Sequence>(contentsOf newElements: S) where S.Iterator.Element == Element {
         let end = elements.count
         elements.append(contentsOf: newElements)
-        guard end != elements.count else {
-            return
+        let count = elements.count - end
+        if 0 < count {
+            arrayDidChange(ArrayChangeEvent(inserted: elements.suffix(count)))
         }
-        arrayDidChange(ArrayChangeEvent(inserted: Array(end..<elements.count)))
     }
 
     public mutating func appendContentsOf<C : Collection>(_ newElements: C) where C.Iterator.Element == Element {
@@ -114,23 +115,26 @@ extension ObservableArray: MutableCollection {
         }
         let end = elements.count
         elements.append(contentsOf: newElements)
-        arrayDidChange(ArrayChangeEvent(inserted: Array(end..<elements.count)))
+        let count = elements.count - end
+        if 0 < count {
+            arrayDidChange(ArrayChangeEvent(inserted: elements.suffix(count)))
+        }
     }
 
     public mutating func removeLast() -> Element {
         let e = elements.removeLast()
-        arrayDidChange(ArrayChangeEvent(deleted: [elements.count]))
+        arrayDidChange(ArrayChangeEvent(removed: [e]))
         return e
     }
 
     public mutating func insert(_ newElement: Element, at i: Int) {
         elements.insert(newElement, at: i)
-        arrayDidChange(ArrayChangeEvent(inserted: [i]))
+        arrayDidChange(ArrayChangeEvent(inserted: elements[i..<i + 1]))
     }
 
     public mutating func remove(at index: Int) -> Element {
         let e = elements.remove(at: index)
-        arrayDidChange(ArrayChangeEvent(deleted: [index]))
+        arrayDidChange(ArrayChangeEvent(removed: [e]))
         return e
     }
 
@@ -140,7 +144,7 @@ extension ObservableArray: MutableCollection {
         }
         let es = elements
         elements.removeAll(keepingCapacity: keepCapacity)
-        arrayDidChange(ArrayChangeEvent(deleted: Array(0..<es.count)))
+        arrayDidChange(ArrayChangeEvent(removed: es))
     }
 
     public mutating func insertContentsOf(_ newElements: [Element], atIndex i: Int) {
@@ -148,13 +152,13 @@ extension ObservableArray: MutableCollection {
             return
         }
         elements.insert(contentsOf: newElements, at: i)
-        arrayDidChange(ArrayChangeEvent(inserted: Array(i..<i + newElements.count)))
+        arrayDidChange(ArrayChangeEvent(inserted: elements[i..<i + newElements.count]))
     }
 
     public mutating func popLast() -> Element? {
         let e = elements.popLast()
         if e != nil {
-            arrayDidChange(ArrayChangeEvent(deleted: [elements.count]))
+            arrayDidChange(ArrayChangeEvent(removed: [e!]))
         }
         return e
     }
@@ -162,13 +166,16 @@ extension ObservableArray: MutableCollection {
 
 extension ObservableArray: RangeReplaceableCollection {
     public mutating func replaceSubrange<C : Collection>(_ subRange: Range<Int>, with newCollection: C) where C.Iterator.Element == Element {
+        let removed = Array(elements[subRange.lowerBound..<subRange.upperBound])
         let oldCount = elements.count
         elements.replaceSubrange(subRange, with: newCollection)
-        let first = subRange.lowerBound
-        let newCount = elements.count
-        let end = first + (newCount - oldCount) + subRange.count
-        arrayDidChange(ArrayChangeEvent(inserted: Array(first..<end),
-                                        deleted: Array(subRange.lowerBound..<subRange.upperBound)))
+        let insertedCount = (elements.count - oldCount) + removed.count
+        if 0 < insertedCount {
+            arrayDidChange(ArrayChangeEvent(inserted: elements[subRange.lowerBound..<subRange.lowerBound + insertedCount],
+                                            removed: removed))
+        } else if 0 < removed.count {
+            arrayDidChange(ArrayChangeEvent(removed: removed))
+        }
     }
 }
 
@@ -193,9 +200,9 @@ extension ObservableArray: Sequence {
         set {
             elements[index] = newValue
             if index == elements.count {
-                arrayDidChange(ArrayChangeEvent(inserted: [index]))
+                arrayDidChange(ArrayChangeEvent(inserted: elements[index..<index + 1]))
             } else {
-                arrayDidChange(ArrayChangeEvent(updated: [index]))
+                arrayDidChange(ArrayChangeEvent(updated: [newValue]))
             }
         }
     }
@@ -205,10 +212,7 @@ extension ObservableArray: Sequence {
             return elements[bounds]
         }
         set {
-            elements[bounds] = newValue
-            let first = bounds.lowerBound
-            arrayDidChange(ArrayChangeEvent(inserted: Array(first..<first + newValue.count),
-                                            deleted: Array(bounds.lowerBound..<bounds.upperBound)))
+            return replaceSubrange(bounds, with: newValue)
         }
     }
 }
